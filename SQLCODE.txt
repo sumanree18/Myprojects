@@ -1,0 +1,162 @@
+CREATE TABLE branch(
+
+ branch_id INT PRIMARY KEY,
+ branch_name VARCHAR(30),
+ mgr_id INT,
+ mgr_start_date DATE,
+ FOREIGN KEY(mgr_id)REFERENCES employee(emp_id) ON DELETE SET NULL
+);
+CREATE TABLE employee(
+ emp_id INT PRIMARY KEY,
+ first_name VARCHAR(36),
+ last_name VARCHAR(35),
+ birth_date DATE,
+ sex VARCHAR(2),
+ salary INT,
+ super_id INT,
+ branch_id int
+);
+CREATE TABLE client(
+
+ client_id INT PRIMARY KEY,
+ client_name VARCHAR(40),
+ branch_id INT,
+ FOREIGN KEY(branch_id) REFERENCES branch(branch_id) ON DELETE SET NULL
+);
+CREATE TABLE works_with(
+emp_id INT,
+client_id INT,
+
+PRIMARY KEY(emp_id,client_id),
+FOREIGN KEY(emp_id) REFERENCES employee(emp_id) ON DELETE  CASCADE,
+FOREIGN KEY(client_id) REFERENCES client(client_id) ON DELETE  CASCADE
+
+
+);
+ALTER TABLE works_with ADD total_sales INT;
+CREATE TABLE branch_supplier(
+
+branch_id INT,
+supplier_name VARCHAR(40),
+supply_type VARCHAR(40),
+PRIMARY KEY(branch_id,supplier_name),
+FOREIGN KEY(branch_id) REFERENCES branch(branch_id) ON DELETE  CASCADE
+
+);
+ALTER TABLE employee
+ADD FOREIGN KEY(branch_id)
+REFERENCES branch(branch_id)
+ON DELETE SET NULL;
+ALTER TABLE employee
+ADD FOREIGN KEY(super_id)
+REFERENCES employee(emp_id)
+ON DELETE SET NULL;
+-- CORPORATE
+INSERT INTO employee VALUES(100,'Naveen','kumar','2001-01-20','M',80000,NULL,NULL);
+INSERT INTO branch VALUES(1,'Corporate',100,'2026-02-09');
+UPDATE employee
+SET branch_id=1
+WHERE emp_id=100;
+INSERT INTO employee VALUES(101,'chalapathi','nagavarma','2000-12-6','M',60000,100,1);
+-- scranton
+INSERT INTO employee VALUES(102,'vamsi','mohan','1999-05-23','M',55000,NULL,NULL);
+INSERT INTO branch VALUES(2,'Scranton',102,'2023-04-06');
+UPDATE employee
+SET branch_id=2
+WHERE emp_id=102;
+INSERT INTO employee VALUES(103,'hemanth','kumar','2001-6-17','M',35000,102,2);
+-- standor
+INSERT INTO employee VALUES(107,'rohith','kumar','2001-05-20','M',25000,NULL,NULL);
+INSERT INTO branch VALUES(3,'Standor',106,'2028-02-13');
+UPDATE employee
+SET branch_id=3
+WHERE emp_id=107;
+INSERT INTO employee VALUES(108,'anjan','kumar','2001-9-27','M',15000,107,3);
+
+-- BRANCH SUPPLIERS
+INSERT INTO branch_supplier VALUES(1,'H Mill','Paper');
+INSERT INTO branch_supplier VALUES(1,'U bins','writing things');
+INSERT INTO branch_supplier VALUES(3,'warner','Paper');
+INSERT INTO branch_supplier VALUES(2,'Hiller','labels');
+INSERT INTO branch_supplier VALUES(2,'Kler','Paper');
+INSERT INTO branch_supplier VALUES(3,'Mike','posters');
+-- client
+INSERT INTO client VALUES(400,'JOHNATHAN',2);
+INSERT INTO client VALUES(535,'MITCHELL',1);
+INSERT INTO client VALUES(403,'SCOTT',2);
+INSERT INTO client VALUES(513,'DAISY',2);
+INSERT INTO client VALUES(536,'ANGELA',3);
+INSERT INTO client VALUES(532,'JACKSON',2);
+-- WORKS WITH
+INSERT INTO works_with VALUES(102,400,52000);
+INSERT INTO works_with VALUES(102,403,257000);
+INSERT INTO works_with VALUES(103,535,22000);
+INSERT INTO works_with VALUES(107,536,342000);
+INSERT INTO works_with VALUES(107,532,37000);
+SELECT * FROM employee;
+update employee
+set super_id=101
+where emp_id=102;
+update employee
+set super_id=103
+where emp_id=107;
+select * from employee;
+delete from employee
+where super_id=NULL or emp_id=106;
+select * from employee;
+select * from branch;
+update branch
+set mgr_id=107
+where branch_id=3;
+select * from branch;
+select * from works_with;
+show tables;
+-- order by highest salary
+select * from employee
+order by salary desc;
+SELECT * FROM employee
+order by sex,first_name,last_name
+LIMIT 3;
+SELECT first_name as forename,last_name as end_name
+from employee;
+SELECT DISTINCT sex,branch_id from employee;
+select count(emp_id)
+from employee;
+-- avge of all employee's salaries
+select avg(salary)
+from employee
+where sex='M';
+SELECT COUNT(sex),sex
+from employee
+group by sex;
+INSERT INTO branch VALUES(4,'Buff',NULL,NULL);
+-- FIND ALL BRANCHES AND NAMES OF THEIR MANAGERS
+SELECT employee.emp_id,employee.first_name,branch.branch_name
+from employee
+join branch
+on employee.emp_id=branch.mgr_id;
+SELECT employee.emp_id,employee.first_name,branch.branch_name
+from employee
+left join branch
+on employee.emp_id=branch.mgr_id;
+SELECT employee.emp_id,employee.first_name,branch.branch_name
+from employee
+right  join branch
+on employee.emp_id=branch.mgr_id;
+-- find names of all employees wh0 have sold over 30k to a single client
+select employee.first_name,employee.last_name
+from employee
+where employee.emp_id in(
+SELECT works_with.emp_id
+from works_with
+where works_with.total_sales>30000
+);
+-- find all clients who are handled by some random branch manager
+select client.client_name
+from client
+where client.branch_id=(
+  select branch.branch_id
+  from branch
+  where branch.mgr_id=102
+  limit 1
+);
