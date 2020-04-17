@@ -1,0 +1,47 @@
+%tensorflow_version 2.x
+import sys 
+import os
+import numpy as np
+from scipy import misc
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow import keras
+import matplotlib.image as mpng
+import pandas as pd
+import cv2
+from tensorflow.keras.preprocessing.image import ImageDataGeneratorX1 = np.load('/content/drive/My Drive/some.npy')
+Y1 = np.ones((X1.shape[0],1))
+print(X1[0].shape)
+X2 = np.load('/content/drive/My Drive/some2.npy')
+Y2 = np.zeros((X2.shape[0],1))
+X_train = np.vstack((X1,X2))/255.0
+Y_train = np.vstack((Y1,Y2))
+class MycallBack(tf.keras.callbacks.Callback):
+  def on_epoch_end(self,epochs,logs={}):
+    if(logs.get('acc') > 0.98):
+      print('Accuracy reached')
+      self.model.stop_trianing = True
+callback = MycallBack()
+print(X_train.shape)
+print(Y_train.shape)
+model = keras.Sequential()
+model.add(keras.layers.Conv2D(32,(3,3),padding = 'same',activation = 'relu',input_shape = (50,50,3)))
+model.add(keras.layers.MaxPooling2D(2,2))
+model.add(keras.layers.Conv2D(64,(3,3),padding = 'same',activation = 'relu'))
+model.add(keras.layers.MaxPooling2D(2,2))
+model.add(keras.layers.Flatten())
+model.add(keras.layers.Dense(520,activation='relu'))
+model.add(keras.layers.Dropout(0.5))
+model.add(keras.layers.Dense(240,activation = 'relu'))
+model.add(keras.layers.Dropout(0.5))
+model.add(keras.layers.Dense(units=1))
+model.summary()
+model.compile(optimizer = 'adam',loss = tf.keras.losses.BinaryCrossentropy(from_logits= True),metrics=['acc'])
+model.fit(X_train,Y_train,epochs = 15)
+N_X = np.load('/content/drive/My Drive/some3.npy')
+N_Y = np.ones((N_X.shape[0],1))
+N_X1 = np.load('/content/drive/My Drive/some4.npy')
+N_Y1 = np.zeros((N_X1.shape[0],1))
+X_valid = np.vstack((N_X,N_X1))/255
+Y_valid = np.vstack((N_Y,N_Y1))
+model.evaluate(X_valid,Y_valid)
